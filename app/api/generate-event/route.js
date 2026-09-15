@@ -28,8 +28,11 @@ Return this exact JSON structure:
   "suggestedCapacity": 50,
   "suggestedTicketType": "free",
   "city": "Extracted city name, or leave empty if none provided",
+  "state": "Extracted state name in India (e.g. Karnataka, Maharashtra), or empty",
   "startDate": "Extracted start date in YYYY-MM-DD format (use current year 2026 if missing), or empty",
-  "endDate": "Extracted end date in YYYY-MM-DD format, or empty"
+  "endDate": "Extracted end date in YYYY-MM-DD format, or empty",
+  "startTime": "Extracted start time in HH:mm format (e.g. 10:00), or default to 10:00",
+  "endTime": "Extracted end time in HH:mm format (e.g. 17:00), or default to 18:00"
 }
 
 User's event idea: ${prompt}

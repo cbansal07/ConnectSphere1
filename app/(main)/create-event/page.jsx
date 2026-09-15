@@ -229,16 +229,51 @@ export default function CreateEventPage() {
     setValue("capacity", generatedData.suggestedCapacity, { shouldValidate: true, shouldDirty: true });
     setValue("ticketType", generatedData.suggestedTicketType, { shouldValidate: true, shouldDirty: true });
     
-    if (generatedData.city) {
-      setValue("city", generatedData.city, { shouldValidate: true, shouldDirty: true });
+    if (generatedData.state) {
+      setValue("state", generatedData.state, { shouldValidate: true, shouldDirty: true });
+      if (generatedData.city) {
+        // Wait a tick for state to register before setting city if needed, but RHF usually handles it.
+        setTimeout(() => {
+          setValue("city", generatedData.city, { shouldValidate: true, shouldDirty: true });
+        }, 100);
+      }
+    } else if (generatedData.city) {
+      // If AI only gave city, try to find the state
+      const allStates = State.getStatesOfCountry("IN");
+      let foundState = null;
+      let foundCity = null;
+
+      for (const s of allStates) {
+        const stateCities = City.getCitiesOfState("IN", s.isoCode);
+        const match = stateCities.find(c => c.name.toLowerCase().includes(generatedData.city.toLowerCase()) || generatedData.city.toLowerCase().includes(c.name.toLowerCase()));
+        if (match) {
+          foundState = s.name;
+          foundCity = match.name;
+          break;
+        }
+      }
+
+      if (foundState && foundCity) {
+        setValue("state", foundState, { shouldValidate: true, shouldDirty: true });
+        setTimeout(() => {
+          setValue("city", foundCity, { shouldValidate: true, shouldDirty: true });
+        }, 100);
+      } else {
+        setValue("city", generatedData.city, { shouldValidate: true, shouldDirty: true });
+      }
     }
     
     if (generatedData.startDate) {
       setValue("startDate", generatedData.startDate, { shouldValidate: true, shouldDirty: true });
     }
-    
     if (generatedData.endDate) {
       setValue("endDate", generatedData.endDate, { shouldValidate: true, shouldDirty: true });
+    }
+    if (generatedData.startTime) {
+      setValue("startTime", generatedData.startTime, { shouldValidate: true, shouldDirty: true });
+    }
+    if (generatedData.endTime) {
+      setValue("endTime", generatedData.endTime, { shouldValidate: true, shouldDirty: true });
     }
     
     toast.success("Event details filled! Customize as needed.");
