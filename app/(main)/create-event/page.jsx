@@ -472,6 +472,12 @@ export default function CreateEventPage() {
                 )}
               />
             </div>
+            {errors.city && (
+              <p className="text-sm text-red-400">{errors.city.message}</p>
+            )}
+            {errors.state && (
+              <p className="text-sm text-red-400">{errors.state.message}</p>
+            )}
 
             <div className="space-y-2 mt-6">
               <Label className="text-sm">Venue Details</Label>
