@@ -55,7 +55,7 @@ export default function EventDashboardPage() {
 
   // Delete event mutation
   const { mutate: deleteEvent, isLoading: isDeleting } = useConvexMutation(
-    api.dashboard.deleteEvent
+    api.events.deleteEvent
   );
 
   const handleDelete = async () => {
