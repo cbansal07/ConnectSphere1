@@ -22,6 +22,7 @@ export const createEvent = mutation({
     ticketType: v.union(v.literal("free"), v.literal("paid")),
     ticketPrice: v.optional(v.number()),
     coverImage: v.optional(v.string()),
+    coverImageStorageId: v.optional(v.id("_storage")),
     themeColor: v.optional(v.string()),
     hasPro: v.optional(v.boolean()),
   },
@@ -50,18 +51,25 @@ export const createEvent = mutation({
       // Force default color for Free users
       const themeColor = args.hasPro ? args.themeColor : defaultColor;
 
+      // Resolve storage URL if uploaded custom image
+      let coverImageUrl = args.coverImage;
+      if (args.coverImageStorageId) {
+        coverImageUrl = await ctx.storage.getUrl(args.coverImageStorageId);
+      }
+
       // Generate slug from title
       const slug = args.title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-      const { hasPro, ...insertData } = args;
+      const { hasPro, coverImageStorageId, coverImage, ...insertData } = args;
 
       // Create event
       const eventId = await ctx.db.insert("events", {
         ...insertData,
         themeColor, // Use validated color
+        coverImage: coverImageUrl,
         slug: `${slug}-${Date.now()}`,
         organizerId: user._id,
         organizerName: user.name,
@@ -151,3 +159,100 @@ export const deleteEvent = mutation({
     return { success: true };
   },
 });
+
+export const incrementPageViews = mutation({
+  args: { eventId: v.id("events") },
+  handler: async (ctx, args) => {
+    const event = await ctx.db.get(args.eventId);
+    if (!event) return;
+    await ctx.db.patch(args.eventId, {
+      pageViews: (event.pageViews || 0) + 1,
+    });
+  },
+});
+
+
+export const submitFeedback = mutation({
+  args: { 
+    eventId: v.id("events"),
+    rating: v.number(),
+    comment: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
+
+    // Ensure user was registered for the event
+    const registration = await ctx.db
+      .query("registrations")
+      .withIndex("by_event_user", q => q.eq("eventId", args.eventId).eq("userId", user._id))
+      .unique();
+      
+    if (!registration || registration.status !== "confirmed") {
+      throw new Error("You must be a confirmed attendee to leave feedback");
+    }
+    
+    // Check if feedback already submitted
+    const existingFeedback = await ctx.db
+      .query("event_feedback")
+      .filter(q => q.and(q.eq(q.field("eventId"), args.eventId), q.eq(q.field("userId"), user._id)))
+      .first();
+      
+    if (existingFeedback) {
+      throw new Error("You have already submitted feedback for this event");
+    }
+
+    await ctx.db.insert("event_feedback", {
+      eventId: args.eventId,
+      userId: user._id,
+      rating: args.rating,
+      comment: args.comment,
+      createdAt: Date.now(),
+    });
+    
+    return { success: true };
+  }
+});
+
+
+export const getEventFeedback = query({
+  args: { eventId: v.id("events") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("event_feedback")
+      .filter(q => q.eq(q.field("eventId"), args.eventId))
+      .order("desc")
+      .collect();
+  }
+});
+
+
+export const getOrganizerRating = query({
+  args: { organizerId: v.string() },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_organizer", q => q.eq("organizerId", args.organizerId))
+      .collect();
+      
+    if (events.length === 0) return 0;
+    
+    let totalRating = 0;
+    let count = 0;
+    
+    for (const event of events) {
+      const feedback = await ctx.db
+        .query("event_feedback")
+        .filter(q => q.eq(q.field("eventId"), event._id))
+        .collect();
+      for (const f of feedback) {
+        totalRating += f.rating;
+        count++;
+      }
+    }
+    
+    if (count === 0) return 0;
+    return (totalRating / count).toFixed(1);
+  }
+});
+

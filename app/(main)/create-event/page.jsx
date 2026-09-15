@@ -211,6 +211,7 @@ export default function CreateEventPage() {
         ticketType: data.ticketType,
         ticketPrice: Number(data.ticketPrice) || 0,
         coverImage: data.coverImage || undefined,
+        coverImageStorageId: data.coverImageStorageId || undefined,
         themeColor: data.themeColor,
         hasPro,
       });
@@ -619,13 +620,19 @@ export default function CreateEventPage() {
         </form>
       </div>
 
-      {/* Unsplash Picker */}
+      {/* Image Picker */}
       {showImagePicker && (
         <UnsplashImagePicker
           isOpen={showImagePicker}
           onClose={() => setShowImagePicker(false)}
-          onSelect={(url) => {
-            setValue("coverImage", url);
+          onSelect={(result) => {
+            if (result.type === "unsplash") {
+              setValue("coverImage", result.url);
+              setValue("coverImageStorageId", undefined);
+            } else if (result.type === "upload") {
+              setValue("coverImageStorageId", result.storageId);
+              setValue("coverImage", result.url); // For instant UI preview
+            }
             setShowImagePicker(false);
           }}
         />

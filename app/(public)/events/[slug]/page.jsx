@@ -3,7 +3,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import {
@@ -16,8 +16,9 @@ import {
   ExternalLink,
   Loader2,
   CheckCircle,
+  Star,
 } from "lucide-react";
-import { useConvexQuery } from "@/hooks/use-convex-query";
+import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
@@ -56,6 +57,19 @@ export default function EventDetailPage() {
     api.registrations.checkRegistration,
     event?._id ? { eventId: event._id } : "skip"
   );
+
+  const { data: organizerRating } = useConvexQuery(
+    api.events.getOrganizerRating,
+    event?.organizerId ? { organizerId: event.organizerId } : "skip"
+  );
+
+  const { mutate: incrementPageViews } = useConvexMutation(api.events.incrementPageViews);
+
+  useEffect(() => {
+    if (event?._id && !isLoading) {
+      incrementPageViews({ eventId: event._id });
+    }
+  }, [event?._id, isLoading, incrementPageViews]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -222,8 +236,17 @@ export default function EventDetailPage() {
                   </Avatar>
                   <div>
                     <p className="font-semibold">{event.organizerName}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
                       Event Organizer
+                      {organizerRating > 0 && (
+                        <>
+                          <span className="mx-1">•</span>
+                          <span className="flex items-center text-yellow-600 font-medium">
+                            <Star className="w-3.5 h-3.5 fill-current mr-1" />
+                            {organizerRating}
+                          </span>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -242,14 +265,27 @@ export default function EventDetailPage() {
               }}
             >
               <CardContent className="p-6 space-y-4">
-                {/* Price */}
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Price</p>
-                  <p className="text-3xl font-bold">
-                    {event.ticketType === "free"
-                      ? "Free"
-                      : `₹${event.ticketPrice}`}
-                  </p>
+                {/* Price and Share */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Price</p>
+                    <p className="text-3xl font-bold">
+                      {event.ticketType === "free"
+                        ? "Free"
+                        : `₹${event.ticketPrice}`}
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Event link copied to clipboard!");
+                    }}
+                    title="Share Event"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </Button>
                   {event.ticketType === "paid" && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Pay at event offline
@@ -297,10 +333,10 @@ export default function EventDetailPage() {
                 {/* Registration Button */}
                 {registration ? (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+                    <div className={`flex items-center gap-2 p-3 rounded-lg ${registration.status === 'waitlisted' ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50'}`}>
                       <CheckCircle className="w-5 h-5" />
                       <span className="font-medium">
-                        You&apos;re registered!
+                        {registration.status === 'waitlisted' ? "You're on the waitlist!" : "You're registered!"}
                       </span>
                     </div>
                     <Button
@@ -316,8 +352,11 @@ export default function EventDetailPage() {
                     Event Ended
                   </Button>
                 ) : isEventFull ? (
-                  <Button className="w-full" disabled>
-                    Event Full
+                  <Button
+                    className="w-full"
+                    onClick={handleRegister}
+                  >
+                    Join Waitlist
                   </Button>
                 ) : isOrganizer ? (
                   <Button

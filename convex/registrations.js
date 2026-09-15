@@ -1,5 +1,5 @@
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 // Generate unique QR code ID
@@ -222,5 +222,58 @@ export const checkInAttendee = mutation({
         checkedInAt: Date.now(),
       },
     };
+  },
+});
+
+export const getEventForBroadcast = internalQuery({
+  args: { eventId: v.id("events") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.eventId);
+  },
+});
+
+export const getAttendeesForBroadcast = internalQuery({
+  args: { eventId: v.id("events") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("registrations")
+      .withIndex("by_event_status", (q) =>
+        q.eq("eventId", args.eventId).eq("status", "confirmed")
+      )
+      .collect();
+  },
+});
+
+export const getUpcomingEventsForReminders = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const in24Hours = now + 24 * 60 * 60 * 1000;
+    const tomorrow = in24Hours + 60 * 60 * 1000;
+    const events = await ctx.db.query("events").filter(q => q.and(q.gte(q.field("startDate"), in24Hours), q.lt(q.field("startDate"), tomorrow))).collect();
+    
+    const result = [];
+    for (const event of events) {
+      const attendees = await ctx.db.query("registrations").withIndex("by_event_status", q => q.eq("eventId", event._id).eq("status", "confirmed")).collect();
+      result.push({ event, attendees });
+    }
+    return result;
+  },
+});
+
+export const getPastEventsForFeedback = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const ago24Hours = now - 24 * 60 * 60 * 1000;
+    const yesterday = ago24Hours - 60 * 60 * 1000;
+    const events = await ctx.db.query("events").filter(q => q.and(q.gte(q.field("endDate"), yesterday), q.lt(q.field("endDate"), ago24Hours))).collect();
+    
+    const result = [];
+    for (const event of events) {
+      const attendees = await ctx.db.query("registrations").withIndex("by_event_status", q => q.eq("eventId", event._id).eq("status", "confirmed")).collect();
+      result.push({ event, attendees });
+    }
+    return result;
   },
 });

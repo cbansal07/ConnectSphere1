@@ -23,6 +23,8 @@ import {
 import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
+import AnnouncementsTab from "./_components/announcements-tab";
+import AnalyticsTab from "./_components/analytics-tab";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -307,7 +309,7 @@ export default function EventDashboardPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 flex-wrap h-auto">
             <TabsTrigger value="all">
               All ({stats.totalRegistrations})
             </TabsTrigger>
@@ -316,6 +318,12 @@ export default function EventDashboardPage() {
             </TabsTrigger>
             <TabsTrigger value="pending">
               Pending ({stats.pendingCount})
+            </TabsTrigger>
+            <TabsTrigger value="announcements">
+              Announcements
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -341,7 +349,7 @@ export default function EventDashboardPage() {
           </div>
 
           {/* Attendee List */}
-          <TabsContent value={activeTab} className="space-y-3 mt-0">
+          <TabsContent value="all" className="space-y-3 mt-0">
             {filteredRegistrations && filteredRegistrations.length > 0 ? (
               filteredRegistrations.map((registration) => (
                 <AttendeeCard
@@ -354,6 +362,40 @@ export default function EventDashboardPage() {
                 No attendees found
               </div>
             )}
+          </TabsContent>
+          <TabsContent value="checked-in" className="space-y-3 mt-0">
+            {filteredRegistrations && filteredRegistrations.length > 0 ? (
+              filteredRegistrations.map((registration) => (
+                <AttendeeCard
+                  key={registration._id}
+                  registration={registration}
+                />
+              ))
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                No checked-in attendees found
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="pending" className="space-y-3 mt-0">
+            {filteredRegistrations && filteredRegistrations.length > 0 ? (
+              filteredRegistrations.map((registration) => (
+                <AttendeeCard
+                  key={registration._id}
+                  registration={registration}
+                />
+              ))
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                No pending attendees found
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="announcements" className="space-y-3 mt-0">
+            <AnnouncementsTab eventId={event._id} />
+          </TabsContent>
+          <TabsContent value="analytics" className="space-y-3 mt-0">
+            <AnalyticsTab event={event} stats={stats} />
           </TabsContent>
         </Tabs>
       </div>

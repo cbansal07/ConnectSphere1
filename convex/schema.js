@@ -68,6 +68,9 @@ export default defineSchema({
     coverImage: v.optional(v.string()),
     themeColor: v.optional(v.string()),
 
+    // Analytics
+    pageViews: v.optional(v.number()),
+
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -95,12 +98,25 @@ export default defineSchema({
     checkedInAt: v.optional(v.number()),
 
     // Status
-    status: v.union(v.literal("confirmed"), v.literal("cancelled")),
+    status: v.union(v.literal("confirmed"), v.literal("cancelled"), v.literal("waitlisted")),
 
     registeredAt: v.number(),
   })
     .index("by_event", ["eventId"])
     .index("by_user", ["userId"])
     .index("by_event_user", ["eventId", "userId"])
-    .index("by_qr_code", ["qrCode"]),
+    .index("by_qr_code", ["qrCode"])
+    .index("by_event_status", ["eventId", "status"]),
+
+  // Event Feedback
+  event_feedback: defineTable({
+    eventId: v.id("events"),
+    userId: v.id("users"),
+    rating: v.number(), // 1 to 5
+    comment: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_event", ["eventId"])
+    .index("by_user", ["userId"])
+    .index("by_event_user", ["eventId", "userId"]),
 });
