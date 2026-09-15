@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Calendar, MapPin, Loader2, Ticket } from "lucide-react";
+import { Calendar, MapPin, Loader2, Ticket, CheckCircle } from "lucide-react";
 import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
@@ -157,6 +157,12 @@ export default function MyTicketsPage() {
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Ticket ID</p>
                 <p className="font-mono text-sm">{selectedTicket.qrCode}</p>
+                {selectedTicket.checkedIn && (
+                  <div className="mt-3 inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                    <CheckCircle className="w-4 h-4" />
+                    Verified & Checked In
+                  </div>
+                )}
               </div>
 
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
