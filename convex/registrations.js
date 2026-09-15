@@ -16,6 +16,7 @@ export const registerForEvent = mutation({
   },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
 
     const event = await ctx.db.get(args.eventId);
     if (!event) {
@@ -84,6 +85,7 @@ export const checkRegistration = query({
 export const getMyRegistrations = query({
   handler: async (ctx) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) return [];
 
     const registrations = await ctx.db
       .query("registrations")
@@ -111,6 +113,7 @@ export const cancelRegistration = mutation({
   args: { registrationId: v.id("registrations") },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
 
     const registration = await ctx.db.get(args.registrationId);
     if (!registration) {
@@ -148,6 +151,7 @@ export const getEventRegistrations = query({
   args: { eventId: v.id("events") },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
 
     const event = await ctx.db.get(args.eventId);
     if (!event) {
@@ -173,6 +177,7 @@ export const checkInAttendee = mutation({
   args: { qrCode: v.string() },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
 
     const registration = await ctx.db
       .query("registrations")

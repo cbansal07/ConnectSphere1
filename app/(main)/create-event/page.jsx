@@ -55,9 +55,9 @@ const eventSchema = z.object({
   address: z.string().optional(),
   city: z.string().min(1, "City is required"),
   state: z.string().optional(),
-  capacity: z.number().min(1, "Capacity must be at least 1"),
+  capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   ticketType: z.enum(["free", "paid"]).default("free"),
-  ticketPrice: z.number().optional(),
+  ticketPrice: z.coerce.number().optional().default(0),
   coverImage: z.string().optional(),
   themeColor: z.string().default("#1e3a8a"),
 });
@@ -67,6 +67,8 @@ export default function CreateEventPage() {
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("limit"); // "limit" or "color"
+  const [isStartDateOpen, setIsStartDateOpen] = useState(false);
+  const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
   // Check if user has Pro plan
   const { has } = useAuth();
@@ -196,11 +198,11 @@ export default function CreateEventPage() {
   };
 
   const handleAIGenerate = (generatedData) => {
-    setValue("title", generatedData.title);
-    setValue("description", generatedData.description);
-    setValue("category", generatedData.category);
-    setValue("capacity", generatedData.suggestedCapacity);
-    setValue("ticketType", generatedData.suggestedTicketType);
+    setValue("title", generatedData.title, { shouldValidate: true, shouldDirty: true });
+    setValue("description", generatedData.description, { shouldValidate: true, shouldDirty: true });
+    setValue("category", generatedData.category, { shouldValidate: true, shouldDirty: true });
+    setValue("capacity", generatedData.suggestedCapacity, { shouldValidate: true, shouldDirty: true });
+    setValue("ticketType", generatedData.suggestedTicketType, { shouldValidate: true, shouldDirty: true });
     toast.success("Event details filled! Customize as needed.");
   };
 
@@ -321,24 +323,11 @@ export default function CreateEventPage() {
             <div className="space-y-2">
               <Label className="text-sm">Start</Label>
               <div className="grid grid-cols-[1fr_auto] gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between"
-                    >
-                      {startDate ? format(startDate, "PPP") : "Pick date"}
-                      <CalendarIcon className="w-4 h-4 opacity-60" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => setValue("startDate", date)}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="date"
+                  {...register("startDate", { valueAsDate: true })}
+                  className="w-full"
+                />
                 <Input
                   type="time"
                   {...register("startTime")}
@@ -356,25 +345,12 @@ export default function CreateEventPage() {
             <div className="space-y-2">
               <Label className="text-sm">End</Label>
               <div className="grid grid-cols-[1fr_auto] gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between"
-                    >
-                      {endDate ? format(endDate, "PPP") : "Pick date"}
-                      <CalendarIcon className="w-4 h-4 opacity-60" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => setValue("endDate", date)}
-                      disabled={(date) => date < (startDate || new Date())}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="date"
+                  {...register("endDate", { valueAsDate: true })}
+                  min={startDate ? format(startDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")}
+                  className="w-full"
+                />
                 <Input
                   type="time"
                   {...register("endTime")}

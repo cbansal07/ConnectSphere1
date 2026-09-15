@@ -90,6 +90,7 @@ export const completeOnboarding = mutation({
   },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
 
     await ctx.db.patch(user._id, {
       location: args.location,

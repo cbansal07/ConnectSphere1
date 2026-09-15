@@ -28,9 +28,12 @@ export const createEvent = mutation({
   handler: async (ctx, args) => {
     try {
       const user = await ctx.runQuery(internal.users.getCurrentUser);
+      if (!user) throw new Error("Unauthenticated");
+
+      const userFreeEvents = user.freeEventsCreated || 0;
 
       // SERVER-SIDE CHECK: Verify event limit for Free users
-      if (!hasPro && user.freeEventsCreated >= 1) {
+      if (!args.hasPro && userFreeEvents >= 1) {
         throw new Error(
           "Free event limit reached. Please upgrade to Pro to create more events."
         );
@@ -38,14 +41,14 @@ export const createEvent = mutation({
 
       // SERVER-SIDE CHECK: Verify custom color usage
       const defaultColor = "#1e3a8a";
-      if (!hasPro && args.themeColor && args.themeColor !== defaultColor) {
+      if (!args.hasPro && args.themeColor && args.themeColor !== defaultColor) {
         throw new Error(
           "Custom theme colors are a Pro feature. Please upgrade to Pro."
         );
       }
 
       // Force default color for Free users
-      const themeColor = hasPro ? args.themeColor : defaultColor;
+      const themeColor = args.hasPro ? args.themeColor : defaultColor;
 
       // Generate slug from title
       const slug = args.title
@@ -67,7 +70,7 @@ export const createEvent = mutation({
 
       // Update user's free event count
       await ctx.db.patch(user._id, {
-        freeEventsCreated: user.freeEventsCreated + 1,
+        freeEventsCreated: userFreeEvents + 1,
       });
 
       return eventId;
@@ -94,6 +97,7 @@ export const getEventBySlug = query({
 export const getMyEvents = query({
   handler: async (ctx) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) return [];
 
     const events = await ctx.db
       .query("events")
@@ -110,6 +114,7 @@ export const deleteEvent = mutation({
   args: { eventId: v.id("events") },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) throw new Error("Unauthenticated");
 
     const event = await ctx.db.get(args.eventId);
     if (!event) {
