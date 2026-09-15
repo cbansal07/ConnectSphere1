@@ -228,6 +228,19 @@ export default function CreateEventPage() {
     setValue("category", generatedData.category, { shouldValidate: true, shouldDirty: true });
     setValue("capacity", generatedData.suggestedCapacity, { shouldValidate: true, shouldDirty: true });
     setValue("ticketType", generatedData.suggestedTicketType, { shouldValidate: true, shouldDirty: true });
+    
+    if (generatedData.city) {
+      setValue("city", generatedData.city, { shouldValidate: true, shouldDirty: true });
+    }
+    
+    if (generatedData.startDate) {
+      setValue("startDate", generatedData.startDate, { shouldValidate: true, shouldDirty: true });
+    }
+    
+    if (generatedData.endDate) {
+      setValue("endDate", generatedData.endDate, { shouldValidate: true, shouldDirty: true });
+    }
+    
     toast.success("Event details filled! Customize as needed.");
   };
 

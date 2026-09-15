@@ -26,7 +26,10 @@ Return this exact JSON structure:
   "description": "Detailed event description in a single paragraph. Use spaces instead of line breaks. Make it 2-3 sentences describing what attendees will learn and experience.",
   "category": "One of: tech, music, sports, art, food, business, health, education, gaming, networking, outdoor, community",
   "suggestedCapacity": 50,
-  "suggestedTicketType": "free"
+  "suggestedTicketType": "free",
+  "city": "Extracted city name, or leave empty if none provided",
+  "startDate": "Extracted start date in YYYY-MM-DD format (use current year 2026 if missing), or empty",
+  "endDate": "Extracted end date in YYYY-MM-DD format, or empty"
 }
 
 User's event idea: ${prompt}
