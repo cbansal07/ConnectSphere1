@@ -43,18 +43,18 @@ import Image from "next/image";
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 const eventSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  description: z.string().min(20, "Description must be at least 20 characters"),
-  category: z.string().min(1, "Please select a category"),
-  startDate: z.date({ required_error: "Start date is required" }),
-  endDate: z.date({ required_error: "End date is required" }),
-  startTime: z.string().regex(timeRegex, "Start time must be HH:MM"),
-  endTime: z.string().regex(timeRegex, "End time must be HH:MM"),
+  title: z.coerce.string().min(5, "Title must be at least 5 characters"),
+  description: z.coerce.string().min(20, "Description must be at least 20 characters"),
+  category: z.coerce.string().min(1, "Please select a category"),
+  startDate: z.coerce.date({ required_error: "Start date is required", invalid_type_error: "Start date is required" }),
+  endDate: z.coerce.date({ required_error: "End date is required", invalid_type_error: "End date is required" }),
+  startTime: z.coerce.string().regex(timeRegex, "Start time must be HH:MM"),
+  endTime: z.coerce.string().regex(timeRegex, "End time must be HH:MM"),
   locationType: z.enum(["physical", "online"]).default("physical"),
-  venue: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  address: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  state: z.string().optional(),
+  venue: z.coerce.string().url("Must be a valid URL").optional().or(z.literal("")),
+  address: z.coerce.string().optional(),
+  city: z.coerce.string().min(1, "City is required"),
+  state: z.coerce.string().optional(),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   ticketType: z.enum(["free", "paid"]).default("free"),
   ticketPrice: z.coerce.number().optional().default(0),
@@ -155,7 +155,7 @@ export default function CreateEventPage() {
       }
 
       // Check event limit for Free users
-      if (!hasPro && currentUser?.freeEventsCreated >= 1) {
+      if (!hasPro && currentUser?.freeEventsCreated >= 5) {
         setUpgradeReason("limit");
         setShowUpgradeModal(true);
         return;
@@ -217,7 +217,7 @@ export default function CreateEventPage() {
           <h1 className="text-4xl font-bold">Create Event</h1>
           {!hasPro && (
             <p className="text-sm text-muted-foreground mt-2">
-              Free: {currentUser?.freeEventsCreated || 0}/1 events created
+              Free: {currentUser?.freeEventsCreated || 0}/5 events created
             </p>
           )}
         </div>
@@ -325,7 +325,7 @@ export default function CreateEventPage() {
               <div className="grid grid-cols-[1fr_auto] gap-2">
                 <Input
                   type="date"
-                  {...register("startDate", { valueAsDate: true })}
+                  {...register("startDate")}
                   className="w-full"
                 />
                 <Input
@@ -347,8 +347,8 @@ export default function CreateEventPage() {
               <div className="grid grid-cols-[1fr_auto] gap-2">
                 <Input
                   type="date"
-                  {...register("endDate", { valueAsDate: true })}
-                  min={startDate ? format(startDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")}
+                  {...register("endDate")}
+                  min={startDate ? format(new Date(startDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")}
                   className="w-full"
                 />
                 <Input
