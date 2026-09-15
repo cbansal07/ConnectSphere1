@@ -1,11 +1,10 @@
 /* eslint-disable react-hooks/incompatible-library */
 "use client";
 
+// Remove zod and resolvers from imports
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { format } from "date-fns";
 import { State, City } from "country-state-city";
 import { CalendarIcon, Loader2, Sparkles } from "lucide-react";
@@ -42,26 +41,6 @@ import Image from "next/image";
 // HH:MM in 24h
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-const eventSchema = z.object({
-  title: z.coerce.string().min(5, "Title must be at least 5 characters"),
-  description: z.coerce.string().min(20, "Description must be at least 20 characters"),
-  category: z.coerce.string().min(1, "Please select a category"),
-  startDate: z.coerce.date({ required_error: "Start date is required", invalid_type_error: "Start date is required" }),
-  endDate: z.coerce.date({ required_error: "End date is required", invalid_type_error: "End date is required" }),
-  startTime: z.coerce.string().regex(timeRegex, "Start time must be HH:MM"),
-  endTime: z.coerce.string().regex(timeRegex, "End time must be HH:MM"),
-  locationType: z.enum(["physical", "online"]).default("physical"),
-  venue: z.coerce.string().url("Must be a valid URL").optional().or(z.literal("")),
-  address: z.coerce.string().optional(),
-  city: z.coerce.string().min(1, "City is required"),
-  state: z.coerce.string().optional(),
-  capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
-  ticketType: z.enum(["free", "paid"]).default("free"),
-  ticketPrice: z.coerce.number().optional().default(0),
-  coverImage: z.string().optional(),
-  themeColor: z.string().default("#1e3a8a"),
-});
-
 export default function CreateEventPage() {
   const router = useRouter();
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -85,9 +64,10 @@ export default function CreateEventPage() {
     watch,
     setValue,
     control,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(eventSchema),
     defaultValues: {
       locationType: "physical",
       ticketType: "free",
@@ -141,6 +121,51 @@ export default function CreateEventPage() {
   };
 
   const onSubmit = async (data) => {
+    clearErrors();
+    let hasError = false;
+
+    if (!data.title || data.title.length < 5) {
+      setError("title", { type: "manual", message: "Title must be at least 5 characters" });
+      hasError = true;
+    }
+    if (!data.description || data.description.length < 20) {
+      setError("description", { type: "manual", message: "Description must be at least 20 characters" });
+      hasError = true;
+    }
+    if (!data.category) {
+      setError("category", { type: "manual", message: "Please select a category" });
+      hasError = true;
+    }
+    if (!data.startDate) {
+      setError("startDate", { type: "manual", message: "Start date is required" });
+      hasError = true;
+    }
+    if (!data.startTime || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.startTime)) {
+      setError("startTime", { type: "manual", message: "Valid start time required" });
+      hasError = true;
+    }
+    if (!data.endDate) {
+      setError("endDate", { type: "manual", message: "End date is required" });
+      hasError = true;
+    }
+    if (!data.endTime || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(data.endTime)) {
+      setError("endTime", { type: "manual", message: "Valid end time required" });
+      hasError = true;
+    }
+    if (!data.city) {
+      setError("city", { type: "manual", message: "City is required" });
+      hasError = true;
+    }
+    if (!data.capacity || Number(data.capacity) < 1) {
+      setError("capacity", { type: "manual", message: "Capacity must be at least 1" });
+      hasError = true;
+    }
+
+    if (hasError) {
+      toast.error("Please fix the validation errors before submitting.");
+      return;
+    }
+
     try {
       const start = combineDateTime(data.startDate, data.startTime);
       const end = combineDateTime(data.endDate, data.endTime);
@@ -182,9 +207,9 @@ export default function CreateEventPage() {
         city: data.city,
         state: data.state || undefined,
         country: "India",
-        capacity: data.capacity,
+        capacity: Number(data.capacity),
         ticketType: data.ticketType,
-        ticketPrice: data.ticketPrice || undefined,
+        ticketPrice: Number(data.ticketPrice) || 0,
         coverImage: data.coverImage || undefined,
         themeColor: data.themeColor,
         hasPro,
