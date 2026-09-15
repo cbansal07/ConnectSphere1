@@ -33,7 +33,7 @@ export const createEvent = mutation({
       const userFreeEvents = user.freeEventsCreated || 0;
 
       // SERVER-SIDE CHECK: Verify event limit for Free users
-      if (!args.hasPro && userFreeEvents >= 5) {
+      if (!args.hasPro && userFreeEvents >= 100) {
         throw new Error(
           "Free event limit reached. Please upgrade to Pro to create more events."
         );
