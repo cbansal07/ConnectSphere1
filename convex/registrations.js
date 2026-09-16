@@ -58,6 +58,7 @@ export const registerForEvent = mutation({
       registrationCount: event.registrationCount + 1,
     });
 
+    await ctx.scheduler.runAfter(0, internal.emails.sendTicketEmail, { to: args.attendeeEmail, eventName: event.title, ticketId: qrCode, eventDate: new Date(event.startDate).toLocaleDateString(), location: event.location || 'Online' });
     return registrationId;
   },
 });
