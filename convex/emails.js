@@ -25,7 +25,7 @@ export const sendTicketEmail = internalAction({
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "ConnectSphere <tickets@updates.connectsphere.com>", // Replace with a verified domain
+          from: "onboarding@resend.dev", // Replace with a verified domain
           to: args.to,
           subject: `Your Ticket for ${args.eventName}`,
           html: `
@@ -77,7 +77,7 @@ export const broadcastAnnouncement = internalAction({
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "ConnectSphere Updates <updates@connectsphere.com>",
+          from: "onboarding@resend.dev",
           to: event.organizerEmail || "noreply@connectsphere.com",
           bcc: emails,
           subject: `Update regarding ${event.title}: ${args.subject}`,
@@ -109,7 +109,7 @@ export const sendEventReminders = internalAction({
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
           body: JSON.stringify({
-            from: "ConnectSphere Reminders <reminders@connectsphere.com>",
+            from: "onboarding@resend.dev",
             to: item.event.organizerEmail || "noreply@connectsphere.com",
             bcc: emails,
             subject: `Reminder: ${item.event.title} is tomorrow!`,
@@ -135,7 +135,7 @@ export const sendFeedbackRequests = internalAction({
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
           body: JSON.stringify({
-            from: "ConnectSphere Feedback <feedback@connectsphere.com>",
+            from: "onboarding@resend.dev",
             to: item.event.organizerEmail || "noreply@connectsphere.com",
             bcc: emails,
             subject: `How was ${item.event.title}?`,
