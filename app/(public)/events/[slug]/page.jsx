@@ -66,10 +66,11 @@ export default function EventDetailPage() {
   const { mutate: incrementPageViews } = useConvexMutation(api.events.incrementPageViews);
 
   useEffect(() => {
-    if (event?._id && !isLoading) {
-      incrementPageViews({ eventId: event._id });
+    if (event?._id) {
+      incrementPageViews({ eventId: event._id }).catch(console.error);
     }
-  }, [event?._id, isLoading, incrementPageViews]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event?._id]);
 
   const handleShare = async () => {
     const url = window.location.href;
