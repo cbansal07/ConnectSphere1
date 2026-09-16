@@ -18,14 +18,14 @@ export const sendTicketEmail = internalAction({
     }
 
     try {
-      await fetch("https://api.resend.com/emails", {
+      const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "onboarding@resend.dev", // Replace with a verified domain
+          from: "onboarding@resend.dev",
           to: args.to,
           subject: `Your Ticket for ${args.eventName}`,
           html: `
@@ -40,6 +40,12 @@ export const sendTicketEmail = internalAction({
           `,
         }),
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Resend API Error:", response.status, errorText);
+      } else {
+        console.log("Email sent successfully to", args.to);
+      }
     } catch (e) {
       console.error("Failed to send ticket email:", e);
     }
