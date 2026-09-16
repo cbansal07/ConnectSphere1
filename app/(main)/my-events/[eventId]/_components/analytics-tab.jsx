@@ -12,13 +12,14 @@ export default function AnalyticsTab({ event, stats }) {
     ? (feedback.reduce((sum, f) => sum + f.rating, 0) / feedback.length).toFixed(1)
     : 0;
 
-  // Mock data for analytics (in a real app, this would come from a Convex query grouping registrations by date)
+  // In a real app, this would come from a complex Convex query grouping by date.
+  // For now, we simulate a curve based on the total page views.
   const viewsData = [
-    { name: "Day 1", views: Math.floor(event.pageViews * 0.1) || 5 },
-    { name: "Day 2", views: Math.floor(event.pageViews * 0.2) || 12 },
-    { name: "Day 3", views: Math.floor(event.pageViews * 0.3) || 20 },
-    { name: "Day 4", views: Math.floor(event.pageViews * 0.4) || 45 },
-    { name: "Today", views: Math.floor(event.pageViews * 0.5) || 78 },
+    { name: "Day 1", views: Math.floor((event.pageViews || 0) * 0.1) },
+    { name: "Day 2", views: Math.floor((event.pageViews || 0) * 0.2) },
+    { name: "Day 3", views: Math.floor((event.pageViews || 0) * 0.3) },
+    { name: "Day 4", views: Math.floor((event.pageViews || 0) * 0.4) },
+    { name: "Today", views: Math.floor((event.pageViews || 0) * 0.5) },
   ];
 
   const salesData = [
