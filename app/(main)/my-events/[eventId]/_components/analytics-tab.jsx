@@ -6,7 +6,8 @@ import { api } from "@/convex/_generated/api";
 import { Star } from "lucide-react";
 
 export default function AnalyticsTab({ event, stats }) {
-  const feedback = useConvexQuery(api.events.getEventFeedback, { eventId: event._id }) || [];
+  const { data: feedbackData } = useConvexQuery(api.events.getEventFeedback, { eventId: event._id });
+  const feedback = feedbackData || [];
   const averageRating = feedback.length > 0 
     ? (feedback.reduce((sum, f) => sum + f.rating, 0) / feedback.length).toFixed(1)
     : 0;

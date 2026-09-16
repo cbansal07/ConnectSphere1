@@ -8,12 +8,15 @@
  * @module
  */
 
+import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
+import type * as emails from "../emails.js";
 import type * as events from "../events.js";
 import type * as explore from "../explore.js";
 import type * as registrations from "../registrations.js";
 import type * as search from "../search.js";
 import type * as seed from "../seed.js";
+import type * as storage from "../storage.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,12 +26,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  crons: typeof crons;
   dashboard: typeof dashboard;
+  emails: typeof emails;
   events: typeof events;
   explore: typeof explore;
   registrations: typeof registrations;
   search: typeof search;
   seed: typeof seed;
+  storage: typeof storage;
   users: typeof users;
 }>;
 
